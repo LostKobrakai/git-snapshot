@@ -21,3 +21,5 @@ git_snapshot-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+git-snapshot-diff.*

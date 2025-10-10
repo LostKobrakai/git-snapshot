@@ -69,19 +69,25 @@ defmodule GitSnapshot do
 
       dir = create_tmp_dir!(context)
       path = Path.join(dir, key)
+      extname = Path.extname(key)
+      diff_path = Path.join(dir, "git-snapshot-diff#{extname}")
 
       case System.cmd(ensure_git!(), ["show", ":#{path}"], stderr_to_stdout: true) do
         {expected, 0} ->
-          given_img = Image.open!(image)
-          expected_img = Image.open!(expected)
+          {:ok, expected_img} = Image.open(expected)
+          {:ok, given_img} = Image.open(image)
+          {:ok, expected_hash} = Image.dhash(expected_img)
+          {:ok, given_hash} = Image.dhash(given_img)
+
+          {:ok, hamming_distance} = Image.hamming_distance(expected_hash, given_hash)
 
           try do
-            {:ok, hamming_distance} = Image.hamming_distance(given_img, expected_img)
             assert hamming_distance <= 10
-            assert image == expected
           rescue
             e in [AssertionError] ->
               File.write!(path, image)
+              {:ok, _, diff} = Image.compare(expected_img, given_img)
+              Image.write!(diff, diff_path)
               reraise(e, __STACKTRACE__)
           end
 
