@@ -74,6 +74,18 @@ defmodule GitSnapshotTest do
                ])
     end
 
+    test "no error for barely different but changed file", context do
+      on_exit(fn ->
+        {_, 0} =
+          System.cmd("git", [
+            "restore",
+            "snapshots/GitSnapshotTest/test-assert_image-error-for-existing-but-changed-file-cebe8af7/key.png"
+          ])
+      end)
+
+      assert_image(context, "key.png", File.read!("test/fixture/barely_different.png"))
+    end
+
     test "error for uncomparable value", context do
       assert_raise RuntimeError, "uncomparable value: 4", fn ->
         assert_image(context, "key", 4)

@@ -72,7 +72,12 @@ defmodule GitSnapshot do
 
       case System.cmd(ensure_git!(), ["show", ":#{path}"], stderr_to_stdout: true) do
         {expected, 0} ->
+          given_img = Image.open!(image)
+          expected_img = Image.open!(expected)
+
           try do
+            {:ok, hamming_distance} = Image.hamming_distance(given_img, expected_img)
+            assert hamming_distance <= 10
             assert image == expected
           rescue
             e in [AssertionError] ->
