@@ -51,6 +51,46 @@ defmodule GitSnapshot do
     end
   end
 
+  @doc """
+  Assert on a image.
+
+  ## Example
+
+    test "name", context do
+      assert_image(context, "file_name.png", image)
+    end
+
+  """
+  if Code.ensure_compiled!(Image) do
+    def assert_image(context, key, image) do
+      if not is_binary(image) do
+        raise "uncomparable value: #{inspect(image)}"
+      end
+
+      dir = create_tmp_dir!(context)
+      path = Path.join(dir, key)
+
+      case System.cmd(ensure_git!(), ["show", ":#{path}"], stderr_to_stdout: true) do
+        {expected, 0} ->
+          try do
+            assert image == expected
+          rescue
+            e in [AssertionError] ->
+              File.write!(path, image)
+              reraise(e, __STACKTRACE__)
+          end
+
+        {_, 128} ->
+          File.write!(path, image)
+          :ok
+      end
+    end
+  else
+    def assert_image(_context, _key, _image) do
+      raise "Install optional dependency :image"
+    end
+  end
+
   defp ensure_git! do
     case System.find_executable("git") do
       nil -> raise "git not found"

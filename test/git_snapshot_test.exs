@@ -43,4 +43,41 @@ defmodule GitSnapshotTest do
       assert_snapshot(context, "key", %TestStruct{value: <<1, 2, 3>>})
     end
   end
+
+  describe "assert_image" do
+    test "no error for existing and unchanged file", context do
+      assert_image(context, "key.png", File.read!("test/fixture/before.png"))
+    end
+
+    test "no error for non-existing file", context do
+      assert_image(context, "key.png", File.read!("test/fixture/before.png"))
+    end
+
+    test "error for existing but changed file", context do
+      on_exit(fn ->
+        {_, 0} =
+          System.cmd("git", [
+            "restore",
+            "snapshots/GitSnapshotTest/test-assert_image-error-for-existing-but-changed-file-cebe8af7/key.png"
+          ])
+      end)
+
+      assert_raise AssertionError, fn ->
+        assert_image(context, "key.png", File.read!("test/fixture/after.png"))
+      end
+
+      assert {_, 1} =
+               System.cmd("git", [
+                 "diff",
+                 "--exit-code",
+                 "snapshots/GitSnapshotTest/test-assert_image-error-for-existing-but-changed-file-cebe8af7/key.png"
+               ])
+    end
+
+    test "error for uncomparable value", context do
+      assert_raise RuntimeError, "uncomparable value: 4", fn ->
+        assert_image(context, "key", 4)
+      end
+    end
+  end
 end
