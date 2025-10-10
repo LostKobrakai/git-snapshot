@@ -10,7 +10,8 @@ defmodule GitSnapshot.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       deps: deps(),
       description: description(),
-      package: package()
+      package: package(),
+      source_url: "https://github.com/LostKobrakai/git-snapshot"
     ]
   end
 
