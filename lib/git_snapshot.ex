@@ -62,7 +62,7 @@ defmodule GitSnapshot do
 
   """
   if Code.ensure_compiled!(Image) do
-    def assert_image(context, key, image) do
+    def assert_image(context, key, image, opts \\ []) do
       if not is_binary(image) do
         raise "uncomparable value: #{inspect(image)}"
       end
@@ -82,7 +82,7 @@ defmodule GitSnapshot do
           {:ok, hamming_distance} = Image.hamming_distance(expected_hash, given_hash)
 
           try do
-            assert hamming_distance <= 10
+            assert hamming_distance <= Keyword.get(opts, :threshold, 10)
           rescue
             e in [AssertionError] ->
               File.write!(path, image)
