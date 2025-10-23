@@ -79,7 +79,8 @@ defmodule GitSnapshot do
       dir = create_tmp_dir!(context)
       path = Path.join(dir, key)
       extname = Path.extname(key)
-      diff_path = Path.join(dir, "git-snapshot-diff#{extname}")
+      basename = Path.basename(key, extname)
+      diff_path = Path.join(dir, "#{basename}-diff#{extname}")
 
       case System.cmd(ensure_git!(), ["show", ":#{path}"], stderr_to_stdout: true) do
         {expected, 0} ->
