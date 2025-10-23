@@ -61,7 +61,7 @@ defmodule GitSnapshot do
     end
 
   """
-  if Code.ensure_compiled!(Image) do
+  if Code.ensure_loaded?(Image) do
     def assert_image(context, key, image, opts \\ []) do
       if not is_binary(image) do
         raise "uncomparable value: #{inspect(image)}"
