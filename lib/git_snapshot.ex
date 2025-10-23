@@ -89,6 +89,7 @@ defmodule GitSnapshot do
 
           try do
             assert number <= Keyword.get(opts, :threshold, 0.0)
+            {_, 0} = System.cmd(ensure_git!(), ["restore", path], stderr_to_stdout: true)
           rescue
             e in [AssertionError] ->
               File.write!(path, image)

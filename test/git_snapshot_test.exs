@@ -74,6 +74,29 @@ defmodule GitSnapshotTest do
                ])
     end
 
+    test "changes are dropped on successful runs", context do
+      on_exit(fn ->
+        {_, 0} =
+          System.cmd("git", [
+            "restore",
+            "snapshots/GitSnapshotTest/test-assert_image-changes-are-dropped-on-successful-runs-e25335ca/key.png"
+          ])
+      end)
+
+      assert_raise AssertionError, fn ->
+        assert_image(context, "key.png", File.read!("test/fixture/after.png"))
+      end
+
+      assert_image(context, "key.png", File.read!("test/fixture/before.png"))
+
+      assert {_, 0} =
+               System.cmd("git", [
+                 "diff",
+                 "--exit-code",
+                 "snapshots/GitSnapshotTest/test-assert_image-changes-are-dropped-on-successful-runs-e25335ca/key.png"
+               ])
+    end
+
     test "no error for barely different but changed file", context do
       on_exit(fn ->
         {_, 0} =
