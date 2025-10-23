@@ -90,6 +90,7 @@ defmodule GitSnapshot do
 
           try do
             assert number <= Keyword.get(opts, :threshold, 0.0)
+            rm_f!(diff_path)
             {_, 0} = System.cmd(ensure_git!(), ["restore", path], stderr_to_stdout: true)
           rescue
             e in [AssertionError] ->
@@ -101,6 +102,22 @@ defmodule GitSnapshot do
         {_, 128} ->
           File.write!(path, image)
           :ok
+      end
+    end
+
+    defp rm_f!(path) do
+      case File.rm(path) do
+        :ok ->
+          :ok
+
+        {:error, :enoent} ->
+          :ok
+
+        {:error, reason} ->
+          raise File.Error,
+            reason: reason,
+            path: IO.chardata_to_string(path),
+            action: "force remove file"
       end
     end
   else

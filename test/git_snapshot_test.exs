@@ -97,6 +97,26 @@ defmodule GitSnapshotTest do
                ])
     end
 
+    test "diffs are removed on successful runs", context do
+      on_exit(fn ->
+        {_, 0} =
+          System.cmd("git", [
+            "restore",
+            "snapshots/GitSnapshotTest/test-assert_image-diffs-are-removed-on-successful-runs-8e09cb4b/key.png"
+          ])
+      end)
+
+      assert_raise AssertionError, fn ->
+        assert_image(context, "key.png", File.read!("test/fixture/after.png"))
+      end
+
+      assert_image(context, "key.png", File.read!("test/fixture/before.png"))
+
+      refute File.exists?(
+               "snapshots/GitSnapshotTest/test-assert_image-diffs-are-removed-on-successful-runs-8e09cb4b/key-diff.png"
+             )
+    end
+
     test "no error for barely different but changed file", context do
       on_exit(fn ->
         {_, 0} =
