@@ -67,6 +67,15 @@ defmodule GitSnapshot do
         raise "uncomparable value: #{inspect(image)}"
       end
 
+      {compare_opts, opts} =
+        Keyword.split(opts, [
+          :metric,
+          :saturation,
+          :brightness,
+          :difference_color,
+          :difference_boost
+        ])
+
       dir = create_tmp_dir!(context)
       path = Path.join(dir, key)
       extname = Path.extname(key)
@@ -76,17 +85,13 @@ defmodule GitSnapshot do
         {expected, 0} ->
           {:ok, expected_img} = Image.open(expected)
           {:ok, given_img} = Image.open(image)
-          {:ok, expected_hash} = Image.dhash(expected_img)
-          {:ok, given_hash} = Image.dhash(given_img)
-
-          {:ok, hamming_distance} = Image.hamming_distance(expected_hash, given_hash)
+          {:ok, number, diff} = Image.compare(expected_img, given_img, compare_opts)
 
           try do
-            assert hamming_distance <= Keyword.get(opts, :threshold, 10)
+            assert number <= Keyword.get(opts, :threshold, 0.0)
           rescue
             e in [AssertionError] ->
               File.write!(path, image)
-              {:ok, _, diff} = Image.compare(expected_img, given_img)
               Image.write!(diff, diff_path)
               reraise(e, __STACKTRACE__)
           end

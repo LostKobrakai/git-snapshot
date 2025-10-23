@@ -83,7 +83,9 @@ defmodule GitSnapshotTest do
           ])
       end)
 
-      assert_image(context, "key.png", File.read!("test/fixture/barely_different.png"))
+      assert_image(context, "key.png", File.read!("test/fixture/barely_different.png"),
+        threshold: 0.2
+      )
     end
 
     test "error for uncomparable value", context do
