@@ -6,4 +6,10 @@ defmodule TestStruct do
       Base.encode16(struct.value)
     end
   end
+
+  defimpl Jason.Encoder do
+    def encode(struct, opts) do
+      Jason.Encode.string(Base.encode16(struct.value), opts)
+    end
+  end
 end

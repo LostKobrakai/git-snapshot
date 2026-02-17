@@ -52,6 +52,60 @@ defmodule GitSnapshot do
   end
 
   @doc """
+  Assert on json data.
+
+  ## Options
+
+  See `Jason.decode/2`.
+
+  ## Example
+
+    test "name", context do
+      assert_json(context, "file_name", "value")
+    end
+
+  """
+  if Code.ensure_loaded?(Jason) do
+    def assert_json(context, key, value, opts \\ []) do
+      # Expecting plain binaries to already be json data
+      string =
+        if is_binary(value) do
+          value
+        else
+          Jason.encode!(value, pretty: true)
+        end
+
+      if not is_binary(string) or not String.printable?(string) do
+        raise "uncomparable value: #{inspect(string)}"
+      end
+
+      dir = create_tmp_dir!(context)
+      path = Path.join(dir, "#{key}.json")
+
+      case System.cmd(ensure_git!(), ["show", ":#{path}"], stderr_to_stdout: true) do
+        {expected, 0} ->
+          try do
+            data = Jason.decode!(string, opts)
+            expected_data = Jason.decode!(expected, opts)
+            assert data == expected_data
+          rescue
+            e in [AssertionError] ->
+              File.write!(path, string)
+              reraise(e, __STACKTRACE__)
+          end
+
+        {_, 128} ->
+          File.write!(path, string)
+          :ok
+      end
+    end
+  else
+    def assert_json(_context, _key, _value, _opts \\ []) do
+      raise "Install optional dependency :jason"
+    end
+  end
+
+  @doc """
   Assert on a image.
 
   ## Example

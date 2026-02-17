@@ -44,6 +44,51 @@ defmodule GitSnapshotTest do
     end
   end
 
+  describe "assert_json" do
+    test "no error for existing and unchanged json data", context do
+      assert_json(context, "key", Jason.encode!("abc"))
+    end
+
+    test "no error when data is semantically unchanged", context do
+      assert_json(context, "key", ~s|{"b": "a","a": "b"}|)
+    end
+
+    test "no error for non-existing file", context do
+      assert_json(context, "key", Jason.encode!("abc"))
+    end
+
+    test "error for existing but changed file", context do
+      on_exit(fn ->
+        {_, 0} =
+          System.cmd("git", [
+            "restore",
+            "snapshots/GitSnapshotTest/test-assert_json-error-for-existing-but-changed-file-fff7b643/key.json"
+          ])
+      end)
+
+      assert_raise AssertionError, fn ->
+        assert_json(context, "key", Jason.encode!("def"))
+      end
+
+      assert {_, 1} =
+               System.cmd("git", [
+                 "diff",
+                 "--exit-code",
+                 "snapshots/GitSnapshotTest/test-assert_json-error-for-existing-but-changed-file-fff7b643/key.json"
+               ])
+    end
+
+    test "error for uncomparable value", context do
+      assert_raise RuntimeError, "uncomparable value: <<1, 2, 3>>", fn ->
+        assert_json(context, "key", <<1, 2, 3>>)
+      end
+    end
+
+    test "Jason.Encoder protocol is called", context do
+      assert_json(context, "key", %TestStruct{value: <<1, 2, 3>>})
+    end
+  end
+
   describe "assert_image" do
     test "no error for existing and unchanged file", context do
       assert_image(context, "key.png", File.read!("test/fixture/before.png"))
