@@ -42,7 +42,7 @@ defmodule GitSnapshot.MixProject do
     [
       files: ~w(lib .formatter.exs mix.exs README* LICENSE*),
       licenses: ["Apache-2.0"],
-      links: []
+      links: %{"GitHub" => "https://github.com/LostKobrakai/git-snapshot"}
     ]
   end
 end
